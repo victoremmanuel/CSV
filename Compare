@@ -1,0 +1,109 @@
+package test;
+
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
+
+public class Compare {
+
+	boolean status = false;
+
+	@SuppressWarnings({ "resource", "rawtypes" })
+	public boolean compare(FileInput fileInput1, FileInput fileInput2,
+			String outFilePath) {
+
+		String[] chunks1 = null;
+		String[] chunks2 = null;
+
+		List<String> temp1 = null;
+		List<String> temp2 = new ArrayList<String>();
+
+		Scanner scanner1 = new Scanner(fileInput1.getFileInputStream());
+		Scanner scanner2 = new Scanner(fileInput2.getFileInputStream());
+
+		// Read the CSV as List of Maps where each Map represents row data for
+		// both base and input
+		Map<String, List<String>> baseRows = new TreeMap<String, List<String>>();
+		Map<String, List<String>> inputRows = new TreeMap<String, List<String>>();
+
+		while (scanner1.hasNext()) {
+
+			// base data
+			if (fileInput1.getFileInputStream() != null) {
+				String line = scanner1.nextLine();
+				chunks1 = line.split(",");
+			}
+			temp1 = new ArrayList<String>();
+			for (String s : chunks1) {
+				temp1.add(s);
+
+			}
+			baseRows.put(chunks1[0], temp1);
+
+			// input data
+			if (fileInput2.getFileInputStream() != null) {
+				String line = scanner2.nextLine();
+				chunks2 = line.split(",");
+			}
+			temp2 = new ArrayList<String>();
+			for (String s : chunks2) {
+				temp2.add(s);
+
+			} // Create Map for each row in CSV
+
+			inputRows.put(chunks2[0], temp2);
+		}
+
+		Set set = baseRows.entrySet();
+		Iterator iterator = set.iterator();
+		Set set1 = inputRows.entrySet();
+		Iterator iterator1 = set1.iterator();
+
+		FileWriter fileWriter = null;
+		try {
+			fileWriter = new FileWriter(outFilePath, true);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		if (baseRows.toString().equals(inputRows.toString())) {
+			status = true;
+		} else
+			status = false;
+
+		while (iterator.hasNext() && iterator1.hasNext()) {
+			Map.Entry me1 = (Map.Entry) iterator.next();
+			Map.Entry me2 = (Map.Entry) iterator1.next();
+
+			if (!me1.getValue().equals(me2.getValue())) {
+				try {
+					String string = me2.getValue().toString();
+					fileWriter.write(string);
+					fileWriter.write(System.lineSeparator());
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		try {
+			fileWriter.flush();
+			fileWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return status;
+	}
+
+}
