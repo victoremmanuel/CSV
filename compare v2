@@ -1,0 +1,159 @@
+package test;
+
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
+
+public class Compare {
+
+	boolean status = false;
+
+	@SuppressWarnings({ "resource", "rawtypes", "unchecked" })
+	public boolean compare(FileInput fileInput1, FileInput fileInput2,
+			String outFilePath) {
+
+		String[] bChunks = null;
+		String[] iChunks = null;
+
+		List<String> bTemp = new ArrayList<String>();
+		List<String> iTemp = new ArrayList<String>();
+
+		Scanner bScanner = new Scanner(fileInput1.getFileInputStream());
+		Scanner iScanner = new Scanner(fileInput2.getFileInputStream());
+
+		// Read the CSV as List of Maps where each Map represents row data for
+		// both base and input
+		Map<String, List<String>> baseRows = new TreeMap<String, List<String>>();
+		Map<String, List<String>> inputRows = new TreeMap<String, List<String>>();
+
+		while (bScanner.hasNext()) {
+
+			// base data
+			if (fileInput1.getFileInputStream() != null) {
+				String line = bScanner.nextLine();
+				bChunks = line.split(",");
+			}
+			bTemp = new ArrayList<String>();
+			for (String s : bChunks) {
+				bTemp.add(s);
+
+			}
+			baseRows.put(bChunks[0], bTemp);
+
+			// input data
+			if (fileInput2.getFileInputStream() != null) {
+				String line = iScanner.nextLine();
+				iChunks = line.split(",");
+			}
+			iTemp = new ArrayList<String>();
+			for (String s : iChunks) {
+				iTemp.add(s);
+
+			}
+			inputRows.put(iChunks[0], iTemp);
+		}
+
+		Set bSet = baseRows.entrySet();
+		Iterator bIterator = bSet.iterator();
+		Set iSet = inputRows.entrySet();
+		Iterator iIterator = iSet.iterator();
+
+		FileWriter fileWriter = null;
+		try {
+			fileWriter = new FileWriter(outFilePath, true);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		if (baseRows.toString().equals(inputRows.toString())) {
+			status = true;
+		} else
+			status = false;
+
+		int misMatches = 0;
+		while (bIterator.hasNext() && iIterator.hasNext()) {
+			Map.Entry bMap = (Map.Entry) bIterator.next();
+			Map.Entry iMap = (Map.Entry) iIterator.next();
+
+			if (!bMap.getValue().equals(iMap.getValue())) {
+				try {
+					misMatches++;
+					List<String> bList = (List<String>) bMap.getValue();
+					List<String> iList = (List<String>) iMap.getValue();
+
+					fileWriter.write("base record: ");
+					fileWriter.write(" Key :" + bMap.getKey().toString() + ",");
+					fileWriter.write(" Value: ");
+					for (String string : bList) {
+						if ((iList.get(bList.size() - 1)).equals(string)) {
+							fileWriter.write(string);
+						} else
+							fileWriter.write(string + ",");
+					}
+					fileWriter.write(System.lineSeparator());
+					fileWriter.write("input record: ");
+					fileWriter.write("Key :" + iMap.getKey().toString() + ",");
+					fileWriter.write(" Value: ");
+					for (String string : iList) {
+						if ((iList.get(iList.size() - 1)).equals(string)) {
+							fileWriter.write(string);
+						} else
+							fileWriter.write(string + ",");
+					}
+					/*
+					 * fileWriter.write(System.lineSeparator()); fileWriter
+					 * .write(
+					 * "--------------------------------------------------------------"
+					 * );
+					 * 
+					 * Iterator<String> iterator1 = bList.iterator();
+					 * Iterator<String> iterator2 = iList.iterator();
+					 * 
+					 * while (iterator1.hasNext() && iterator2.hasNext()) {
+					 * 
+					 * if (!iterator1.next().equals(iterator2.next())) { String
+					 * temp = (String) iterator2.next(); fileWriter.write(temp +
+					 * " mismatch in input file"); }
+					 * 
+					 * }
+					 */
+					fileWriter.write(System.lineSeparator());
+					fileWriter.write(System.lineSeparator());
+
+					fileWriter
+							.write("--------------------------------------------------------------");
+					fileWriter.write(System.lineSeparator());
+
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		try {
+			fileWriter.write(misMatches + " mismatches out of "
+					+ baseRows.size());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		try {
+			fileWriter.flush();
+			fileWriter.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return status;
+	}
+}
